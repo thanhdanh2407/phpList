@@ -158,51 +158,55 @@ if (isset($_POST['logout'])) {
             </thead>
             <tbody>
                 <?php
-        include 'config/connect.php';
+                include 'config/connect.php';
 
-        $results_per_page = 5;
+                $results_per_page = 5;
 
-        if (!isset($_GET['page'])) {
-            $page = 1;
-        } else {
-            $page = $_GET['page'];
-        }
-
-        $start_from = ($page - 1) * $results_per_page;
-
-        $sql = "SELECT NHANVIEN.Ma_NV, Ten_NV, Phai, Noi_Sinh, Ten_Phong, Luong
-                FROM NHANVIEN
-                JOIN PHONGBAN ON NHANVIEN.Ma_Phong = PHONGBAN.Ma_Phong
-                LIMIT $start_from, $results_per_page";
-
-        $result = $conn->query($sql);
-
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                echo "<tr>";
-                echo "<td>" . $row['Ma_NV'] . "</td>";
-                echo "<td>" . $row['Ten_NV'] . "</td>";
-                echo "<td>";
-                if ($row['Phai'] == 'NU') {
-                    echo '<img src="images/woman.png" alt="Woman">';
+                if (!isset($_GET['page'])) {
+                    $page = 1;
                 } else {
-                    echo '<img src="images/man.png" alt="Man">';
+                    $page = $_GET['page'];
                 }
-                echo "</td>";
-                echo "<td>" . $row['Noi_Sinh'] . "</td>";
-                echo "<td>" . $row['Ten_Phong'] . "</td>";
-                echo "<td>" . $row['Luong'] . "</td>";
-                if ($_SESSION['role'] == 'admin') {
-                    echo '<td><a href="editUser.php?id=' . $row['Ma_NV'] . '"><i class="fas fa-edit" style="color: #BBBBBB;"></i></a> | <a href="deleteUser.php?id=' . $row['Ma_NV'] . '"><i class="fas fa-trash-alt" style="color: #BBBBBB;"></i></a></td>';
-                }
-                echo "</tr>";
-            }
-        } else {
-            echo "Không có dữ liệu.";
-        }
 
-        $conn->close();
-        ?>
+                $start_from = ($page - 1) * $results_per_page;
+
+                $sql = "SELECT NHANVIEN.Ma_NV, Ten_NV, Phai, Noi_Sinh, Ten_Phong, Luong
+                        FROM NHANVIEN
+                        JOIN PHONGBAN ON NHANVIEN.Ma_Phong = PHONGBAN.Ma_Phong
+                        LIMIT ?, ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("ii", $start_from, $results_per_page);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($result->num_rows > 0) {
+                    while ($row = $result->fetch_assoc()) {
+                        echo "<tr>";
+                        echo "<td>" . htmlspecialchars($row['Ma_NV']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['Ten_NV']) . "</td>";
+                        echo "<td>";
+                        if ($row['Phai'] == 'NU') {
+                            echo '<img src="images/woman.png" alt="Woman">';
+                        } else {
+                            
+                            echo '<img src="images/man.png" alt="Man">';
+                        }
+                        echo "</td>";
+                        echo "<td>" . htmlspecialchars($row['Noi_Sinh']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['Ten_Phong']) . "</td>";
+                        echo "<td>" . htmlspecialchars($row['Luong']) . "</td>";
+                        if ($_SESSION['role'] == 'admin') {
+                            echo '<td><a href="editUser.php?id=' . htmlspecialchars($row['Ma_NV']) . '"><i class="fas fa-edit" style="color: #BBBBBB;"></i></a> | <a href="deleteUser.php?id=' . htmlspecialchars($row['Ma_NV']) . '"><i class="fas fa-trash-alt" style="color: #BBBBBB;"></i></a></td>';
+                        }
+                        echo "</tr>";
+                    }
+                } else {
+                    echo "Không có dữ liệu.";
+                }
+                $stmt->close();
+                $conn->close();
+                ?>
+
             </tbody>
         </table>
 
